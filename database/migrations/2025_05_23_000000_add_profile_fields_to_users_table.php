@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class AddProfileFieldsToUsersTable extends Migration
+{
+    public function up()
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('profile_picture')->nullable()->after('email');
+            $table->string('cover_photo')->nullable()->after('profile_picture');
+            $table->string('bio', 255)->nullable()->after('cover_photo');
+            $table->string('location', 100)->nullable()->after('bio');
+            $table->string('website', 255)->nullable()->after('location');
+        });
+    }
+
+    public function down()
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn([
+                'profile_picture',
+                'cover_photo',
+                'bio',
+                'location',
+                'website'
+            ]);
+        });
+    }
+}

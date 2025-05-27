@@ -14,6 +14,12 @@ class FeedController extends Controller
             ->latest()
             ->paginate(6);
 
+        $trails = Trail::where('user_id', auth()->id())
+            ->orWhereHas('sharedWithMe', fn ($q) => $q->where('shared_to', auth()->id()))
+            ->latest()
+            ->get();
+
+
         $sugestoes = User::where('id', '!=', auth()->id())
             ->whereNotIn('id', auth()->user()->following->pluck('id'))
             ->inRandomOrder()

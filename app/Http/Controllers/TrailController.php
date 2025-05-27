@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Trail;
 use App\Models\TrailImage;
+use App\Models\TrailVideo;
 use App\Notifications\TrailCommentNotification;
 use App\Notifications\TrailInteractionNotification;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class TrailController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Trail::with(['user', 'likes', 'comments.user', 'images']);
+        $query = Trail::with(['user', 'likes', 'comments.user', 'images', 'videos']);
 
         if ($request->has('search') && $request->filled('search')) {
             $search = $request->search;
@@ -46,6 +47,7 @@ class TrailController extends Controller
             'distance' => 'required|numeric|min:0',
             'avg_time' => 'required|integer|min:1',
             'images.*' => 'nullable|image|max:2048',
+            'videos.*' => 'nullable|mimetypes:video/mp4,video/webm,video/ogg|max:10240',
         ]);
 
         $data['user_id'] = auth()->id();
@@ -56,6 +58,16 @@ class TrailController extends Controller
             foreach ($request->file('images') as $image) {
                 $path = $image->store('trails', 'public');
                 TrailImage::create([
+                    'trail_id' => $trail->id,
+                    'path' => $path,
+                ]);
+            }
+        }
+
+        if ($request->hasFile('videos')) {
+            foreach ($request->file('videos') as $video) {
+                $path = $video->store('trail_videos', 'public');
+                TrailVideo::create([
                     'trail_id' => $trail->id,
                     'path' => $path,
                 ]);
@@ -92,11 +104,13 @@ class TrailController extends Controller
             'distance' => 'required|numeric|min:0',
             'avg_time' => 'required|integer|min:1',
             'description' => 'required|string',
-            'images.*' => 'image|max:2048',
+            'images.*' => 'nullable|image|max:2048',
+            'videos.*' => 'nullable|mimetypes:video/mp4,video/webm,video/ogg|max:10240',
         ]);
 
         $trail->update($data);
 
+        // Remove imagens
         if ($request->has('remove_images')) {
             foreach ($request->remove_images as $imageId) {
                 $image = $trail->images()->where('id', $imageId)->first();
@@ -107,10 +121,30 @@ class TrailController extends Controller
             }
         }
 
+        // Remove vídeos
+        if ($request->has('remove_videos')) {
+            foreach ($request->remove_videos as $videoId) {
+                $video = $trail->videos()->where('id', $videoId)->first();
+                if ($video) {
+                    Storage::delete('public/' . $video->path);
+                    $video->delete();
+                }
+            }
+        }
+
+        // Upload novas imagens
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $uploadedImage) {
                 $path = $uploadedImage->store('trails', 'public');
                 $trail->images()->create(['path' => $path]);
+            }
+        }
+
+        // Upload novos vídeos
+        if ($request->hasFile('videos')) {
+            foreach ($request->file('videos') as $uploadedVideo) {
+                $path = $uploadedVideo->store('trail_videos', 'public');
+                $trail->videos()->create(['path' => $path]);
             }
         }
 
@@ -129,6 +163,12 @@ class TrailController extends Controller
             $image->delete();
         }
 
+        // Deletar vídeos associados
+        foreach ($trail->videos as $video) {
+            Storage::delete('public/' . $video->path);
+            $video->delete();
+        }
+
         $trail->delete();
         return redirect()->route('feed')->with('success', 'Trilha removida!');
     }
@@ -145,7 +185,6 @@ class TrailController extends Controller
         } else {
             $trail->likes()->create(['user_id' => $userId]);
 
-            // Notificação para o dono da trilha
             if ($trail->user_id !== $userId) {
                 $trail->user->notify(new TrailInteractionNotification('like', [
                     'user_name' => $user->name,
@@ -191,7 +230,6 @@ class TrailController extends Controller
             'body' => $data['body'],
         ]);
 
-        // Notifica o dono da trilha, se for diferente do usuário que comentou
         if ($trail->user_id !== auth()->id()) {
             $trail->user->notify(new TrailCommentNotification(
                 auth()->user()->name,

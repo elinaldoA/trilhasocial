@@ -14,6 +14,10 @@ class Trail extends Model
     {
         return $this->hasMany(TrailImage::class);
     }
+    public function videos()
+    {
+        return $this->hasMany(TrailVideo::class);
+    }
 
     public function user()
     {
@@ -33,5 +37,9 @@ class Trail extends Model
     public function shares()
     {
         return $this->hasMany(TrailShare::class);
+    }
+    public function sharedWithMe()
+    {
+        return $this->hasMany(SharedTrail::class);
     }
 }

@@ -60,10 +60,12 @@
                         </div>
                     </header>
 
-                    {{-- Imagem (carrossel) --}}
                     @if ($trail->images->count())
-                        <div
+                        {{-- Carrossel de imagens --}}
+                        <div x-data="{ current: 0 }"
                             class="relative w-full aspect-w-16 aspect-h-9 bg-black select-none overflow-hidden rounded-t-lg">
+
+                            {{-- Container de imagens --}}
                             <div class="flex transition-transform duration-500"
                                 :style="'transform: translateX(-' + (current * 100) + '%)'">
                                 @foreach ($trail->images as $image)
@@ -73,14 +75,14 @@
                             </div>
 
                             @if ($trail->images->count() > 1)
-                                {{-- Navegação esquerda/direita --}}
+                                {{-- Botões de navegação --}}
                                 <button
                                     @click="current = (current - 1 + {{ $trail->images->count() }}) % {{ $trail->images->count() }}"
-                                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-60 text-white rounded-full p-1 focus:outline-none">
+                                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-60 text-white rounded-full p-1">
                                     ‹
                                 </button>
                                 <button @click="current = (current + 1) % {{ $trail->images->count() }}"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-60 text-white rounded-full p-1 focus:outline-none">
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-60 text-white rounded-full p-1">
                                     ›
                                 </button>
 
@@ -93,6 +95,17 @@
                                     @endforeach
                                 </div>
                             @endif
+                        </div>
+                    @elseif ($trail->videos->count())
+                        <div
+                            class="relative w-full aspect-w-16 aspect-h-9 bg-black select-none overflow-hidden rounded-t-lg">
+                            <video autoplay muted playsinline controls
+                                class="w-full h-full object-cover rounded-t-lg video-autoplay-with-audio"
+                                data-audio="true">
+                                <source src="{{ asset('storage/' . $trail->videos->first()->path) }}"
+                                    type="video/mp4" />
+                                Seu navegador não suporta vídeos HTML5.
+                            </video>
                         </div>
                     @endif
 
@@ -211,48 +224,87 @@
                             </div>
                         @endforeach
                     </div>
-
                     {{-- Popup Compartilhar --}}
                     <div x-show="popupCompartilharAberto" x-transition
                         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-                        <div class="bg-white p-6 rounded-2xl shadow-2xl w-96 relative animate-fade-in-up">
-                            <button @click="popupCompartilharAberto = false"
-                                class="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-2xl font-bold focus:outline-none">&times;</button>
+                        <div
+                            class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden relative flex flex-col animate-fade-in-up">
 
-                            <h2 class="text-xl font-semibold mb-5 text-gray-800">Compartilhar esta trilha</h2>
-
-                            <div class="flex flex-col space-y-4 text-base">
-                                @php
-                                    $url = urlencode(route('trails.show', $trail));
-                                    $title = urlencode($trail->title ?? 'Confira essa trilha!');
-                                @endphp
-
-                                <a href="https://wa.me/?text={{ $title }}%20{{ $url }}"
-                                    target="_blank"
-                                    class="flex items-center gap-2 text-green-600 hover:text-green-700 transition">
-                                    <i class="fab fa-whatsapp text-xl"></i> WhatsApp
-                                </a>
-                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ $url }}"
-                                    target="_blank"
-                                    class="flex items-center gap-2 text-blue-700 hover:text-blue-800 transition">
-                                    <i class="fab fa-facebook text-xl"></i> Facebook
-                                </a>
-                                <a href="https://twitter.com/intent/tweet?text={{ $title }}&url={{ $url }}"
-                                    target="_blank"
-                                    class="flex items-center gap-2 text-blue-400 hover:text-blue-500 transition">
-                                    <i class="fab fa-twitter text-xl"></i> Twitter
-                                </a>
-                                <a href="https://instagram.com/?text={{ $title }}&url={{ $url }}"
-                                    target="_blank"
-                                    class="flex items-center gap-2 text-purple-400 hover:text-purplue-500 transition">
-                                    <i class="fas fa-instagram text-xl"></i> Instagram
-                                </a>
-                                <button
-                                    @click="navigator.clipboard.writeText('{{ route('trails.show', $trail) }}').then(() => alert('Link copiado!'))"
-                                    class="text-gray-700 hover:text-gray-900 focus:outline-none">
-                                    Copiar Link
-                                </button>
+                            {{-- Cabeçalho --}}
+                            <div class="px-4 py-3 border-b relative text-center font-semibold text-gray-800">
+                                Compartilhar com
+                                <button @click="popupCompartilharAberto = false"
+                                    class="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold focus:outline-none">&times;</button>
                             </div>
+
+                            {{-- Formulário de envio para seguidores --}}
+                            <form method="POST" action="{{ route('trails.share', $trail) }}"
+                                class="flex-1 flex flex-col">
+                                @csrf
+
+                                <div class="px-4 pt-3 pb-2 border-b text-sm text-gray-600">
+                                    Selecione seguidores para enviar: <strong>"{{ $trail->description }}"</strong>
+                                </div>
+
+                                <div class="flex-1 overflow-y-auto px-4">
+                                    @foreach (auth()->user()->followers as $follower)
+                                        <div class="flex items-center justify-between py-3 border-b">
+                                            <div class="flex items-center gap-3">
+                                                <img src="{{ $follower->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($follower->name) }}"
+                                                    alt="{{ $follower->name }}"
+                                                    class="w-10 h-10 rounded-full object-cover">
+                                                <span class="text-gray-800">{{ $follower->name }}</span>
+                                            </div>
+                                            <label>
+                                                <input type="checkbox" name="followers[]"
+                                                    value="{{ $follower->id }}" class="peer hidden">
+                                                <span
+                                                    class="px-3 py-1 border rounded-full text-sm text-blue-600 border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white cursor-pointer">
+                                                    Selecionar
+                                                </span>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                {{-- Botões de ação --}}
+                                <div class="p-4 border-t flex justify-between items-center bg-white gap-2 flex-wrap">
+                                    <button type="submit"
+                                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg">
+                                        Enviar para seguidores
+                                    </button>
+                                    <br/>
+                                    <br/>
+                                    <br/>
+                                    {{-- Redes sociais externas --}}
+                                    @php
+                                        $url = urlencode(route('trails.show', $trail));
+                                        $title = urlencode($trail->title ?? 'Confira essa trilha!');
+                                    @endphp
+                                    <div class="flex items-center gap-3 text-sm flex-wrap">
+                                        <a href="https://wa.me/?text={{ $title }}%20{{ $url }}"
+                                            target="_blank"
+                                            class="text-green-600 hover:text-green-700 flex items-center gap-1">
+                                            <i class="fab fa-whatsapp text-lg"></i> WhatsApp |
+                                        </a>
+                                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ $url }}"
+                                            target="_blank"
+                                            class="text-blue-700 hover:text-blue-800 flex items-center gap-1">
+                                            <i class="fab fa-facebook text-lg"></i> Facebook |
+                                        </a>
+                                        <a href="https://twitter.com/intent/tweet?text={{ $title }}&url={{ $url }}"
+                                            target="_blank"
+                                            class="text-blue-400 hover:text-blue-500 flex items-center gap-1">
+                                            <i class="fab fa-twitter text-lg"></i> Twitter |
+                                        </a>
+                                        <a href="https://instagram.com/?text={{ $title }}&url={{ $url }}"
+                                            target="_blank"
+                                            class="text-purple-500 hover:text-purple-600 flex items-center gap-1">
+                                            <i class="fab fa-instagram text-lg"></i> Instagram
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
@@ -287,4 +339,33 @@
             </div>
         </aside>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const videos = document.querySelectorAll(".video-autoplay-with-audio");
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target;
+
+                    if (entry.isIntersecting) {
+                        // Ativa som e inicia reprodução se visível
+                        if (video.dataset.audio === "true") {
+                            video.muted = false;
+                            video.play().catch(err => {
+                                console.warn("Autoplay bloqueado:", err);
+                            });
+                        }
+                    } else {
+                        // Pausa o vídeo quando sai da tela
+                        video.pause();
+                    }
+                });
+            }, {
+                threshold: 0.5
+            });
+
+            videos.forEach(video => observer.observe(video));
+        });
+    </script>
+
 </x-app-layout>

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class MessageController extends Controller
 {
@@ -38,17 +39,26 @@ class MessageController extends Controller
 
         $request->validate([
             'receiver_id' => 'required|exists:users,id|not_in:' . $userId,
-            'body' => 'required|string|max:1000',
+            'body' => 'nullable|string|max:1000',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,txt|max:5120', // max 5MB
         ]);
+
+        $attachmentPath = null;
+
+        if ($request->hasFile('attachment')) {
+            $attachmentPath = $request->file('attachment')->store('messages', 'public');
+        }
 
         Message::create([
             'sender_id' => $userId,
             'receiver_id' => $request->receiver_id,
-            'body' => $request->body,
+            'body' => $request->body ?? '',
+            'attachment' => $attachmentPath,
             'is_read' => false,
         ]);
 
-        return redirect()->route('messages.index')->with('success', 'Mensagem enviada com sucesso!');
+        return redirect()->route('messages.show', $request->receiver_id)
+            ->with('success', 'Mensagem enviada com sucesso!');
     }
 
     public function show($userId)
@@ -61,13 +71,13 @@ class MessageController extends Controller
 
         $selectedUser = User::findOrFail($userId);
 
-        // 🔄 Marcar como lidas todas as mensagens enviadas pelo outro usuário
+        // Marcar mensagens como lidas
         Message::where('sender_id', $selectedUser->id)
             ->where('receiver_id', $currentUser->id)
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
-        // Busca todas as mensagens da conversa
+        // Buscar mensagens da conversa
         $messages = Message::with(['sender', 'receiver'])
             ->where(function ($q) use ($currentUser, $selectedUser) {
                 $q->where('sender_id', $currentUser->id)
@@ -82,15 +92,12 @@ class MessageController extends Controller
 
         $users = User::where('id', '!=', $currentUser->id)->orderBy('name')->get();
 
-        // Contador de mensagens não lidas
         $unreadMessagesCount = Message::where('receiver_id', $currentUser->id)
             ->where('is_read', false)
             ->count();
 
         return view('messages.index', compact('users', 'currentUser', 'selectedUser', 'messages', 'unreadMessagesCount'));
     }
-
-
 
     public function destroy($id)
     {
@@ -100,6 +107,11 @@ class MessageController extends Controller
 
         if ($message->sender_id !== $userId && $message->receiver_id !== $userId) {
             abort(403, 'Acesso negado');
+        }
+
+        // Apaga arquivo se existir
+        if ($message->attachment && Storage::disk('public')->exists($message->attachment)) {
+            Storage::disk('public')->delete($message->attachment);
         }
 
         $message->delete();

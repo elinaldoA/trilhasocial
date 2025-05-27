@@ -1,6 +1,6 @@
 <x-app-layout>
     <h1 class="text-2xl font-semibold mb-6">
-        {{ $user->name }} {{ isset($seguidores) ? 'tem' : 'está seguindo' }}
+        Você {{ isset($seguidores) ? 'tem' : 'está seguindo' }}
         {{ isset($seguidores) ? 'seguidores' : '' }}
     </h1>
 

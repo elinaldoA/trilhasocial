@@ -64,6 +64,20 @@
             </div>
 
             <div>
+                <label for="videos" class="block text-sm font-medium text-gray-700 mb-1">Vídeos curtos da trilha</label>
+                <input type="file" name="videos[]" id="videos" multiple accept="video/mp4,video/x-m4v,video/*"
+                    class="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-600 file:text-white
+                        hover:file:bg-blue-700
+                        cursor-pointer
+                    " />
+            </div>
+
+
+            <div>
                 <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition">
                     Salvar Trilha

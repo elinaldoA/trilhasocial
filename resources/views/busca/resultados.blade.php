@@ -31,35 +31,5 @@
                 </div>
             @endif
         </div>
-
-        {{-- Lista de Trilhas --}}
-        <div>
-            <h3 class="text-xl font-bold mb-3">Trilhas</h3>
-            @if ($trails->isEmpty())
-                <p class="text-gray-600">Nenhuma trilha encontrada.</p>
-            @else
-                <ul class="space-y-4">
-                    @foreach ($trails as $trail)
-                        <li class="bg-white rounded shadow p-4 hover:bg-gray-50 transition">
-                            <div class="flex items-center space-x-4">
-                                @if ($trail->images && count($trail->images))
-                                    <img src="{{ asset('storage/' . $trail->images[0]->path) }}" alt="Imagem da trilha" class="w-16 h-16 object-cover rounded">
-                                @endif
-                                <div class="flex-1">
-                                    <h4 class="text-gray-800 font-semibold">{{ $trail->user->name }}</h4>
-                                    <p class="text-gray-600 text-sm mt-1">{{ Str::limit($trail->description, 100) }}</p>
-                                    <a href="{{ route('trails.show', $trail->id) }}" class="text-indigo-600 hover:underline text-sm mt-2 inline-block">
-                                        Ver Trilha
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-                <div class="mt-4">
-                    {{ $trails->appends(request()->query())->links() }}
-                </div>
-            @endif
-        </div>
     </div>
 </x-app-layout>

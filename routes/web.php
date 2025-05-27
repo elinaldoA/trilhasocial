@@ -7,6 +7,7 @@ use App\Http\Controllers\TrailController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\TrailShareController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/comments', [TrailCommentController::class, 'store'])->name('comments.store');
     Route::post('/trails/{trail}/share', [TrailController::class, 'share'])->name('trails.share');
     Route::post('/trails/{id}/toggle', [TrailController::class, 'toggle'])->name('trails.toggle');
+    Route::post('/trails/{trail}/share', [TrailShareController::class, 'share'])->name('trails.share');
+
 
     Route::post('/seguir/{user}', [FollowController::class, 'toggle'])->name('follow.toggle');
     Route::get('/{user}/seguidores', [FollowController::class, 'seguidores'])->name('follow.seguidores');

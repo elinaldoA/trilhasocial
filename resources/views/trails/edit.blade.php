@@ -69,17 +69,31 @@
             </div>
 
             <!-- Upload de novas imagens -->
-            <div>
+            <div class="mb-4">
                 <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Adicionar Novas
                     Imagens</label>
                 <input type="file" name="images[]" id="images" multiple accept="image/*"
                     class="block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-full file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-blue-600 file:text-white
-                        hover:file:bg-blue-700
-                        cursor-pointer" />
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-full file:border-0
+            file:text-sm file:font-semibold
+            file:bg-blue-600 file:text-white
+            hover:file:bg-blue-700
+            cursor-pointer" />
+            </div>
+
+            <!-- Upload de novos vídeos -->
+            <div class="mb-6">
+                <label for="videos" class="block text-sm font-medium text-gray-700 mb-2">Adicionar Novos
+                    Vídeos</label>
+                <input type="file" name="videos[]" id="videos" multiple accept="video/*"
+                    class="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-full file:border-0
+            file:text-sm file:font-semibold
+            file:bg-green-600 file:text-white
+            hover:file:bg-green-700
+            cursor-pointer" />
             </div>
 
             <!-- Imagens atuais -->
@@ -90,10 +104,10 @@
                         @foreach ($trail->images as $image)
                             <div class="relative group rounded overflow-hidden shadow" id="image-{{ $image->id }}">
                                 <img src="{{ asset('storage/' . $image->path) }}" alt="Imagem"
-                                    class="w-full h-32 object-cover transition-opacity duration-200">
+                                    class="w-full h-32 object-cover transition-opacity duration-200" />
 
                                 <input type="checkbox" name="remove_images[]" value="{{ $image->id }}"
-                                    class="hidden" id="remove-image-{{ $image->id }}">
+                                    class="hidden" id="remove-image-{{ $image->id }}" />
 
                                 <div class="absolute top-1 right-1">
                                     <button type="button" onclick="toggleImageRemoval({{ $image->id }})"
@@ -106,6 +120,34 @@
                     </div>
                 </div>
             @endif
+
+            <!-- Vídeos atuais -->
+            @if ($trail->videos->count())
+                <div class="mt-6">
+                    <p class="text-sm font-medium text-gray-700 mb-3">Vídeos atuais:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach ($trail->videos as $video)
+                            <div class="relative group rounded overflow-hidden shadow" id="video-{{ $video->id }}">
+                                <video controls class="w-full h-48 object-cover rounded">
+                                    <source src="{{ asset('storage/' . $video->path) }}" type="video/mp4" />
+                                    Seu navegador não suporta vídeo.
+                                </video>
+
+                                <input type="checkbox" name="remove_videos[]" value="{{ $video->id }}"
+                                    class="hidden" id="remove-video-{{ $video->id }}" />
+
+                                <div class="absolute top-1 right-1">
+                                    <button type="button" onclick="toggleVideoRemoval({{ $video->id }})"
+                                        class="bg-red-600 text-white text-xs px-2 py-1 rounded">
+                                        Remover
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
 
             <!-- Ações -->
             <div class="flex justify-end space-x-4 mt-6">
@@ -132,6 +174,19 @@
                 imageContainer.classList.add('opacity-50', 'ring-2', 'ring-red-500');
             } else {
                 imageContainer.classList.remove('opacity-50', 'ring-2', 'ring-red-500');
+            }
+        }
+
+        function toggleVideoRemoval(videoId) {
+            const checkbox = document.getElementById('remove-video-' + videoId);
+            const videoContainer = document.getElementById('video-' + videoId);
+
+            checkbox.checked = !checkbox.checked;
+
+            if (checkbox.checked) {
+                videoContainer.classList.add('opacity-50', 'ring-2', 'ring-red-500');
+            } else {
+                videoContainer.classList.remove('opacity-50', 'ring-2', 'ring-red-500');
             }
         }
     </script>

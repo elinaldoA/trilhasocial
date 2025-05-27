@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', default: 'TrilhaSocial'),
+    'name' => env('APP_NAME', default: 'SouTrilheiro'),
 
     /*
     |--------------------------------------------------------------------------

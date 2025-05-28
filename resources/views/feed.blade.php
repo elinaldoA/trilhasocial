@@ -2,17 +2,41 @@
     <div class="max-w-6xl mx-auto px-4 py-6 flex gap-8">
 
         {{-- Feed principal --}}
-        <main class="flex-1 space-y-6">
+        <main class="flex-1 space-y-8 bg-gray-50">
+            @if (session('success'))
+                <div x-data="{ show: true }"
+                    x-show="show"
+                    x-init="setTimeout(() => { show = false; setTimeout(() => location.reload(), 500); }, 4000)"
+                    x-transition
+                    class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"
+                    role="alert">
+                    {{ session('success') }}
+                </div>
+            @endif
 
+            @if ($errors->any())
+                <div x-data="{ show: true }"
+                    x-show="show"
+                    x-init="setTimeout(() => { show = false; setTimeout(() => location.reload(), 500); }, 4000)"
+                    x-transition
+                    class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+                    role="alert">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             @foreach ($trails as $trail)
                 <article x-data="{ showComments: false, popupCompartilharAberto: false, current: 0 }"
-                    class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                    class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md hover:shadow-xl transition-all duration-300 p-6 space-y-4">
 
                     {{-- Header --}}
-                    <header class="flex items-center px-4 py-3">
+                    <header class="flex items-center gap-4">
                         <img src="{{ asset('storage/' . $trail->user->profile_photo_path ?? 'https://ui-avatars.com/api/?name=' . urlencode($trail->user->name)) }}"
                             alt="Foto do usuário {{ $trail->user->name }}"
-                            class="w-10 h-10 rounded-full object-cover border border-gray-300 mr-3" />
+                            class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
 
                         <div class="flex flex-col flex-1 min-w-0">
                             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $trail->name }}</h2>
@@ -139,16 +163,20 @@
                     </div>
 
                     {{-- Rodapé com interações --}}
-                    <footer class="px-4 py-2 flex justify-between items-center text-gray-600">
-                        <div class="flex space-x-4">
+                    <footer
+                        class="px-4 py-3 flex justify-between items-center text-gray-600 bg-white border-t border-gray-200"
+                        x-data="{ popupDenunciaAberto: false }">
 
+                        <div class="flex space-x-6 items-center">
                             {{-- Curtir --}}
                             <form method="POST" action="{{ route('trails.toggle', $trail) }}">
                                 @csrf
-                                <button type="submit" class="flex items-center space-x-1 focus:outline-none">
+                                <button type="submit" class="flex items-center space-x-1 focus:outline-none"
+                                    aria-label="Curtir trilha">
                                     <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="h-6 w-6 {{ $trail->likes->contains('user_id', auth()->id()) ? 'fill-red-500 text-red-500' : 'text-gray-500 hover:text-red-500' }}"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        class="h-6 w-6 transition-colors duration-200 {{ $trail->likes->contains('user_id', auth()->id()) ? 'fill-red-500 text-red-500' : 'text-gray-500 hover:text-red-500' }}"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" role="img"
+                                        aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
                                     </svg>
@@ -158,9 +186,12 @@
 
                             {{-- Comentário --}}
                             <button @click="showComments = !showComments"
-                                class="flex items-center space-x-1 focus:outline-none text-gray-500 hover:text-blue-600">
+                                class="flex items-center space-x-1 focus:outline-none text-gray-500 hover:text-blue-600 transition-colors duration-200"
+                                aria-expanded="false" :aria-expanded="showComments.toString()"
+                                aria-label="Mostrar/ocultar comentários">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" role="img"
+                                    aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4.363-1.02L3 20l1.02-4.363A9.77 9.77 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                 </svg>
@@ -168,16 +199,92 @@
                             </button>
                         </div>
 
-                        {{-- Compartilhar --}}
-                        <button @click="popupCompartilharAberto = true"
-                            class="text-gray-500 hover:text-gray-700 focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor"
-                                stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 12v1a2 2 0 002 2h12a2 2 0 002-2v-1M16 6l-4-4-4 4M12 2v14" />
-                            </svg>
-                        </button>
+                        <div class="flex items-center space-x-6">
+                            {{-- Compartilhar --}}
+                            <button @click="popupCompartilharAberto = true"
+                                class="text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
+                                aria-label="Compartilhar trilha">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                    stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                                    stroke-linecap="round" stroke-linejoin="round" role="img"
+                                    aria-hidden="true">
+                                    <path
+                                        d="M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 14a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 20a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.6 13.5l6.8 3.98M15.4 6.5l-6.8 3.98" />
+                                </svg>
+                            </button>
+
+                            {{-- Denunciar --}}
+                            <button @click="popupDenunciaAberto = true"
+                                class="text-red-500 hover:text-red-700 focus:outline-none transition-colors duration-200"
+                                aria-label="Denunciar trilha">
+                                Denunciar
+                            </button>
+                        </div>
+
+                        {{-- Modal Denúncia --}}
+                        <div x-show="popupDenunciaAberto" x-transition.opacity
+                            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                            style="display: none;" @keydown.escape.window="popupDenunciaAberto = false"
+                            @click.away="popupDenunciaAberto = false" role="dialog" aria-modal="true"
+                            aria-labelledby="modal-title-denuncia">
+                            <div
+                                class="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-lg border border-gray-200 overflow-auto max-h-[90vh]">
+                                <h3 id="modal-title-denuncia" class="text-lg font-semibold mb-4 text-gray-900">
+                                    Denunciar esta trilha</h3>
+                                <form method="POST" action="{{ route('trails.report', $trail) }}">
+                                    @csrf
+                                    <label for="reason" class="block mb-2 font-medium text-gray-700">Motivo <span
+                                            class="text-red-500">*</span></label>
+                                    <select id="reason" name="reason" required
+                                        class="w-full mb-4 rounded border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                        <option value="" disabled selected>Selecione um motivo</option>
+                                        <option value="conteudo_inapropriado">Conteúdo inapropriado</option>
+                                        <option value="spam">Spam</option>
+                                        <option value="direitos_autorais">Violação de direitos autorais</option>
+                                        <option value="outro">Outro</option>
+                                    </select>
+
+                                    <label for="details" class="block mb-2 font-medium text-gray-700">Detalhes
+                                        (opcional)</label>
+                                    <textarea id="details" name="details" rows="4" placeholder="Descreva o problema..."
+                                        class="w-full rounded border border-gray-300 p-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+
+                                    <div class="flex justify-end space-x-3 mt-6">
+                                        <button type="button" @click="popupDenunciaAberto = false"
+                                            class="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit"
+                                            class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600">
+                                            Enviar denúncia
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        {{-- (Opcional) Modal Compartilhar (vazio para implementar) --}}
+                        <div x-show="popupCompartilharAberto" x-transition.opacity
+                            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                            style="display: none;" @keydown.escape.window="popupCompartilharAberto = false"
+                            @click.away="popupCompartilharAberto = false" role="dialog" aria-modal="true"
+                            aria-labelledby="modal-title-compartilhar">
+                            <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-lg border border-gray-200">
+                                <h3 id="modal-title-compartilhar" class="text-lg font-semibold mb-4 text-gray-900">
+                                    Compartilhar trilha</h3>
+                                <!-- Conteúdo do modal compartilhar aqui -->
+                                <button @click="popupCompartilharAberto = false"
+                                    class="mt-4 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                    Fechar
+                                </button>
+                            </div>
+                        </div>
+
                     </footer>
+
+                    <!-- Alpine.js -->
+                    <script src="//unpkg.com/alpinejs" defer></script>
+
 
                     {{-- Comentários --}}
                     <div x-show="showComments" x-transition
@@ -273,9 +380,9 @@
                                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg">
                                         Enviar para seguidores
                                     </button>
-                                    <br/>
-                                    <br/>
-                                    <br/>
+                                    <br />
+                                    <br />
+                                    <br />
                                     {{-- Redes sociais externas --}}
                                     @php
                                         $url = urlencode(route('trails.show', $trail));

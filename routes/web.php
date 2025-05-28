@@ -28,12 +28,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/trails/{trail}/share', [TrailController::class, 'share'])->name('trails.share');
     Route::post('/trails/{id}/toggle', [TrailController::class, 'toggle'])->name('trails.toggle');
     Route::post('/trails/{trail}/share', [TrailShareController::class, 'share'])->name('trails.share');
-
+    Route::post('/trails/{trail}/report', [TrailController::class, 'report'])->name('trails.report');
 
     Route::post('/seguir/{user}', [FollowController::class, 'toggle'])->name('follow.toggle');
     Route::get('/{user}/seguidores', [FollowController::class, 'seguidores'])->name('follow.seguidores');
     Route::get('/{user}/seguindo', [FollowController::class, 'seguindo'])->name('follow.seguindo');
     Route::get('/sugestoes', [FollowController::class, 'sugestoes'])->name('follow.sugestoes');
+    Route::get('/solicitacoes', [FollowController::class, 'solicitacoes'])->name('follow.solicitacoes');
+    Route::post('/solicitacoes/{user}/aceitar', [FollowController::class, 'aceitarPedido'])->name('follow.aceitar');
+    Route::post('/solicitacoes/{user}/rejeitar', [FollowController::class, 'rejeitarPedido'])->name('follow.rejeitar');
+    // Remover um seguidor que te segue
+    Route::post('/follow/remover-seguidor/{user}', [FollowController::class, 'removerSeguidor'])->name('follow.remover_seguidor');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read_all');

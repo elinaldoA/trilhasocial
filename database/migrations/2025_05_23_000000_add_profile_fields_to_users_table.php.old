@@ -10,7 +10,7 @@ class AddProfileFieldsToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('profile_picture')->nullable()->after('email');
-            $table->string('cover_photo')->nullable()->after('profile_picture');
+            $table->string('cover_photo_path')->nullable()->after('profile_picture');
             $table->string('bio', 255)->nullable()->after('cover_photo');
             $table->string('location', 100)->nullable()->after('bio');
             $table->string('website', 255)->nullable()->after('location');
@@ -22,7 +22,7 @@ class AddProfileFieldsToUsersTable extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
                 'profile_picture',
-                'cover_photo',
+                'cover_photo_path',
                 'bio',
                 'location',
                 'website'

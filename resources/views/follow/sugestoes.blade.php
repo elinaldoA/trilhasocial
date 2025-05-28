@@ -4,7 +4,7 @@
     @forelse($sugestoes as $pessoa)
         <div class="flex justify-between items-center mb-3 p-2 border-b">
             <div class="flex items-center space-x-3">
-                <img src="{{ asset('storage/' . $pessoa->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($pessoa->name)) }}" class="w-8 h-8 rounded-full">
+                <img src="{{ asset('storage/' . $pessoa->profile_photo_path ?? 'https://ui-avatars.com/api/?name=' . urlencode($pessoa->name)) }}" class="w-8 h-8 rounded-full">
                 <a href="{{ route('profile.edit', $pessoa->id) }}" class="hover:underline">
                     {{ $pessoa->name }}
                 </a>

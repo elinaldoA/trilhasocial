@@ -31,6 +31,7 @@ class ProfileUpdateRequest extends FormRequest
             'website' => ['nullable', 'url', 'max:255'],
             'profile_photo_path' => ['nullable', 'image', 'max:2048'],
             'cover_photo_path' => ['nullable', 'image', 'max:4096'],
+            'is_private' => ['nullable', 'boolean'],
         ];
     }
 }

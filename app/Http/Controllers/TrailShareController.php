@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SharedTrail;
 use App\Models\Trail;
-use App\Models\Message; // Importa a model de mensagens
+use App\Models\Message;
 use Illuminate\Http\Request;
 
 class TrailShareController extends Controller
@@ -43,7 +43,6 @@ class TrailShareController extends Controller
                 'is_read' => false,
                 'trail_id' => $trail->id,
             ]);
-
         }
 
         return back()->with('success', 'Trilha compartilhada com sucesso e mensagem enviada no chat!');

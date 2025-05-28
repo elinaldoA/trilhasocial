@@ -90,6 +90,7 @@
                 </x-slot>
                 <x-slot name="content">
                     <x-dropdown-link :href="route('profile.edit')">Perfil</x-dropdown-link>
+                    <x-dropdown-link :href="route('follow.solicitacoes', $user)">Solicitações</x-dropdown-link>
                     <x-dropdown-link :href="route('follow.seguidores', $user)">Meus Seguidores</x-dropdown-link>
                     <x-dropdown-link :href="route('follow.seguindo', $user)">Seguindo</x-dropdown-link>
                     <x-dropdown-link :href="route('follow.sugestoes')">Sugestões</x-dropdown-link>

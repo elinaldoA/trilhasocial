@@ -17,14 +17,36 @@ class ProfileController extends Controller
     public function show($username)
     {
         $user = User::where('username', $username)->firstOrFail();
+        $viewer = auth()->user();
 
+        $isOwner = $viewer && $viewer->id === $user->id;
+        $isFollower = $viewer && $user->followers()
+            ->where('follower_id', $viewer->id)
+            ->wherePivot('status', 'accepted')
+            ->exists();
+
+        $hasPendingRequest = $viewer && $user->followers()
+            ->where('follower_id', $viewer->id)
+            ->wherePivot('status', 'pending')
+            ->exists();
+
+        // Se o perfil é privado e o viewer não é o dono nem um seguidor aceito
+        if ($user->is_private && !$isOwner && !$isFollower) {
+            return view('profile.privado', [
+                'user' => $user,
+                'hasPendingRequest' => $hasPendingRequest
+            ]);
+        }
+
+        // Caso seja público ou o usuário tenha acesso
         $trails = Trail::where('user_id', $user->id)
-                    ->latest()
-                    ->with('images', 'likes', 'comments')
-                    ->get();
+            ->latest()
+            ->with('images', 'likes', 'comments')
+            ->get();
 
-        return view('profile.show', compact('user', 'trails'));
+        return view('profile.publico', compact('user', 'trails'));
     }
+
 
     public function edit(Request $request): View
     {

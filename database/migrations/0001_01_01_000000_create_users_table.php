@@ -21,6 +21,11 @@ return new class extends Migration
             $table->string('password');
 
             $table->string('profile_photo_path')->nullable();
+            $table->string('profile_picture')->nullable();
+            $table->string('cover_photo_path')->nullable();
+            $table->string('bio', 255)->nullable();
+            $table->string('location', 100)->nullable();
+            $table->string('website', 255)->nullable();
 
             $table->integer('followers_count')->default(0);
             $table->integer('following_count')->default(0);

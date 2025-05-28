@@ -19,9 +19,9 @@ class MessageController extends Controller
             ->get();
 
         $messages = Message::with(['sender', 'receiver'])
-            ->where(function($query) use ($userId) {
+            ->where(function ($query) use ($userId) {
                 $query->where('sender_id', $userId)
-                      ->orWhere('receiver_id', $userId);
+                    ->orWhere('receiver_id', $userId);
             })
             ->orderBy('created_at', 'desc')
             ->get();
@@ -71,21 +71,19 @@ class MessageController extends Controller
 
         $selectedUser = User::findOrFail($userId);
 
-        // Marcar mensagens como lidas
         Message::where('sender_id', $selectedUser->id)
             ->where('receiver_id', $currentUser->id)
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
-        // Buscar mensagens da conversa
         $messages = Message::with(['sender', 'receiver'])
             ->where(function ($q) use ($currentUser, $selectedUser) {
                 $q->where('sender_id', $currentUser->id)
-                ->where('receiver_id', $selectedUser->id);
+                    ->where('receiver_id', $selectedUser->id);
             })
             ->orWhere(function ($q) use ($currentUser, $selectedUser) {
                 $q->where('sender_id', $selectedUser->id)
-                ->where('receiver_id', $currentUser->id);
+                    ->where('receiver_id', $currentUser->id);
             })
             ->orderBy('created_at', 'asc')
             ->get();
@@ -109,7 +107,6 @@ class MessageController extends Controller
             abort(403, 'Acesso negado');
         }
 
-        // Apaga arquivo se existir
         if ($message->attachment && Storage::disk('public')->exists($message->attachment)) {
             Storage::disk('public')->delete($message->attachment);
         }

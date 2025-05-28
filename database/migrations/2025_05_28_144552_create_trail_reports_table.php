@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('followers', function (Blueprint $table) {
+        Schema::create('trail_reports', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('trail_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('follower_id')->constrained('users')->onDelete('cascade');
-            $table->enum('status', ['pending', 'accepted'])->default('accepted');
+            $table->text('reason');
+            $table->text('details');
             $table->timestamps();
-
-            $table->unique(['user_id', 'follower_id']);
         });
-
     }
 
     /**
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('followers');
+        Schema::dropIfExists('trail_reports');
     }
 };

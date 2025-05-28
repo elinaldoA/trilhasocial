@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Trail;
 use App\Models\TrailImage;
+use App\Models\TrailReport;
 use App\Models\TrailVideo;
 use App\Notifications\TrailCommentNotification;
 use App\Notifications\TrailInteractionNotification;
@@ -15,17 +16,6 @@ class TrailController extends Controller
     public function index(Request $request)
     {
         $query = Trail::with(['user', 'likes', 'comments.user', 'images', 'videos']);
-
-        if ($request->has('search') && $request->filled('search')) {
-            $search = $request->search;
-
-            $query->where(function ($q) use ($search) {
-                $q->where('description', 'like', '%' . $search . '%')
-                    ->orWhereHas('user', function ($q2) use ($search) {
-                        $q2->where('name', 'like', '%' . $search . '%');
-                    });
-            });
-        }
 
         $trails = $query->latest()->paginate(6);
 
@@ -79,6 +69,9 @@ class TrailController extends Controller
 
     public function show(Trail $trail)
     {
+        $trail->load(['images', 'videos']);
+        $trail->loadCount(['likes', 'comments', 'shares']);
+
         return view('trails.show', compact('trail'));
     }
 
@@ -110,7 +103,6 @@ class TrailController extends Controller
 
         $trail->update($data);
 
-        // Remove imagens
         if ($request->has('remove_images')) {
             foreach ($request->remove_images as $imageId) {
                 $image = $trail->images()->where('id', $imageId)->first();
@@ -121,7 +113,6 @@ class TrailController extends Controller
             }
         }
 
-        // Remove vídeos
         if ($request->has('remove_videos')) {
             foreach ($request->remove_videos as $videoId) {
                 $video = $trail->videos()->where('id', $videoId)->first();
@@ -132,7 +123,6 @@ class TrailController extends Controller
             }
         }
 
-        // Upload novas imagens
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $uploadedImage) {
                 $path = $uploadedImage->store('trails', 'public');
@@ -140,7 +130,6 @@ class TrailController extends Controller
             }
         }
 
-        // Upload novos vídeos
         if ($request->hasFile('videos')) {
             foreach ($request->file('videos') as $uploadedVideo) {
                 $path = $uploadedVideo->store('trail_videos', 'public');
@@ -157,13 +146,11 @@ class TrailController extends Controller
             abort(403, 'Acesso não autorizado.');
         }
 
-        // Deletar imagens associadas
         foreach ($trail->images as $image) {
             Storage::delete('public/' . $image->path);
             $image->delete();
         }
 
-        // Deletar vídeos associados
         foreach ($trail->videos as $video) {
             Storage::delete('public/' . $video->path);
             $video->delete();
@@ -205,8 +192,10 @@ class TrailController extends Controller
 
         if ($like) {
             $like->delete();
+            $mensagem = 'Você descurtiu a trilha.';
         } else {
             $trail->likes()->create(['user_id' => $user->id]);
+            $mensagem = 'Você curtiu a trilha!';
 
             if ($trail->user_id !== $user->id) {
                 $trail->user->notify(new TrailInteractionNotification('like', [
@@ -216,8 +205,9 @@ class TrailController extends Controller
             }
         }
 
-        return back()->with('success', 'Curtida alternada!');
+        return back()->with('success', $mensagem);
     }
+
 
     public function comment(Request $request, Trail $trail)
     {
@@ -248,5 +238,30 @@ class TrailController extends Controller
         ]);
 
         return back()->with('success', 'Trilha compartilhada!');
+    }
+
+    public function report(Request $request, Trail $trail)
+    {
+        $data = $request->validate([
+            'reason' => 'required|string|max:1000',
+            'details' => 'nullable|string|max:1000',
+        ]);
+
+        $alreadyReported = TrailReport::where('trail_id', $trail->id)
+            ->where('user_id', auth()->id())
+            ->exists();
+
+        if ($alreadyReported) {
+            return back()->withErrors('Você já denunciou esta trilha anteriormente.');
+        }
+
+        TrailReport::create([
+            'trail_id' => $trail->id,
+            'user_id' => auth()->id(),
+            'reason' => $data['reason'],
+            'details' => $data['details'],
+        ]);
+
+        return back()->with('success', 'Trilha reportada com sucesso. Obrigado por nos avisar!');
     }
 }

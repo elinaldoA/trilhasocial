@@ -10,14 +10,9 @@
         <div class="hidden sm:block flex-1 max-w-md mx-4">
             <form action="{{ route('buscar') }}" method="GET" role="search">
                 <label for="search-input" class="sr-only">Buscar pessoas ou trilhas</label>
-                <input
-                    id="search-input"
-                    name="buscar"
-                    type="search"
-                    placeholder="Buscar pessoas ou trilhas"
+                <input id="search-input" name="buscar" type="search" placeholder="Buscar pessoas ou trilhas"
                     class="w-full px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-300 dark:border-gray-700"
-                    autocomplete="off"
-                />
+                    autocomplete="off" />
             </form>
         </div>
 
@@ -41,8 +36,8 @@
 
             <!-- Feed Icon -->
             <a href="{{ route('feed') }}" title="Feed" aria-label="Feed">
-                <svg class="h-6 w-6 hover:text-blue-600 dark:hover:text-white" fill="none" stroke="currentColor" stroke-width="1.8"
-                    viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <svg class="h-6 w-6 hover:text-blue-600 dark:hover:text-white" fill="none" stroke="currentColor"
+                    stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M3 12l9-9 9 9v8a2 2 0 01-2 2h-4v-6H9v6H5a2 2 0 01-2-2v-8z" />
                 </svg>
@@ -50,8 +45,8 @@
 
             <!-- Messages Icon with Badge -->
             <a href="{{ route('messages.index') }}" class="relative" title="Mensagens" aria-label="Mensagens">
-                <svg class="h-6 w-6 hover:text-blue-600 dark:hover:text-white" fill="none" stroke="currentColor" stroke-width="1.8"
-                    viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <svg class="h-6 w-6 hover:text-blue-600 dark:hover:text-white" fill="none" stroke="currentColor"
+                    stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h12a2 2 0 012 2z" />
                 </svg>
@@ -64,8 +59,8 @@
 
             <!-- Notifications Icon with Badge -->
             <a href="{{ route('notifications') }}" class="relative" title="Notificações" aria-label="Notificações">
-                <svg class="h-6 w-6 hover:text-blue-600 dark:hover:text-white" fill="none" stroke="currentColor" stroke-width="1.8"
-                    viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <svg class="h-6 w-6 hover:text-blue-600 dark:hover:text-white" fill="none" stroke="currentColor"
+                    stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M15 17h5l-1.4-1.4A2 2 0 0118 14v-3a6 6 0 00-12 0v3a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1" />
                 </svg>
@@ -82,21 +77,29 @@
                     <button
                         class="flex items-center space-x-2 focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded-full"
                         aria-haspopup="true" aria-expanded="false">
-                        <img class="h-8 w-8 rounded-full object-cover" src="{{ $profilePhoto }}" alt="{{ $user->name }} avatar" />
-                        <span class="hidden lg:block text-sm font-medium text-gray-800 dark:text-white truncate max-w-[8rem]">
+                        @if ($user->profile_photo_path)
+                            <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Avatar"
+                                class="h-9 w-9 rounded-full object-cover">
+                        @else
+                            <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar"
+                                class="h-9 w-9 rounded-full object-cover">
+                        @endif
+                        <span
+                            class="hidden lg:block text-sm font-medium text-gray-800 dark:text-white truncate max-w-[8rem]">
                             {{ $user->name }}
                         </span>
                     </button>
                 </x-slot>
                 <x-slot name="content">
-                    <x-dropdown-link :href="route('profile.edit')">Perfil</x-dropdown-link>
+                    <x-dropdown-link :href="route('perfil.publico', $user->username)">Perfil</x-dropdown-link>
                     <x-dropdown-link :href="route('follow.solicitacoes', $user)">Solicitações</x-dropdown-link>
                     <x-dropdown-link :href="route('follow.seguidores', $user)">Meus Seguidores</x-dropdown-link>
                     <x-dropdown-link :href="route('follow.seguindo', $user)">Seguindo</x-dropdown-link>
                     <x-dropdown-link :href="route('follow.sugestoes')">Sugestões</x-dropdown-link>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
+                        <x-dropdown-link :href="route('logout')"
+                            onclick="event.preventDefault(); this.closest('form').submit();">
                             Sair
                         </x-dropdown-link>
                     </form>
@@ -110,16 +113,14 @@
                 class="p-2 text-gray-600 dark:text-gray-300 focus:outline-none hover:text-blue-600 dark:hover:text-white"
                 aria-label="Menu principal" :aria-expanded="open.toString()">
                 <!-- Hamburger -->
-                <svg :class="{ 'hidden': open, 'inline-flex': !open }" class="h-6 w-6" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 6h16M4 12h16M4 18h16" />
+                <svg :class="{ 'hidden': open, 'inline-flex': !open }" class="h-6 w-6" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
                 <!-- Close -->
                 <svg :class="{ 'hidden': !open, 'inline-flex': open }" class="h-6 w-6 hidden" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
@@ -131,7 +132,13 @@
         <div class="pt-4 pb-4 px-4 space-y-3">
             <!-- Mobile User Info -->
             <div class="flex items-center space-x-3">
-                <img class="h-9 w-9 rounded-full object-cover" src="{{ $profilePhoto }}" alt="{{ $user->name }} avatar" />
+                @if ($user->profile_photo_path)
+                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Avatar"
+                        class="h-9 w-9 rounded-full object-cover">
+                @else
+                    <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar"
+                        class="h-9 w-9 rounded-full object-cover">
+                @endif
                 <div class="overflow-hidden">
                     <div class="text-gray-800 dark:text-white font-medium truncate">{{ $user->name }}</div>
                     <div class="text-gray-500 dark:text-gray-400 text-sm truncate">{{ $user->email }}</div>
@@ -149,7 +156,8 @@
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
+                <x-responsive-nav-link :href="route('logout')"
+                    onclick="event.preventDefault(); this.closest('form').submit();">
                     Sair
                 </x-responsive-nav-link>
             </form>

@@ -1,6 +1,12 @@
 <x-app-layout>
     <div class="max-w-3xl mx-auto mt-8 p-4 text-center">
-        <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="{{ $user->name }}" class="mx-auto w-24 h-24 rounded-full mb-4">
+        @if ($user->profile_photo_path)
+            <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Avatar"
+                class="mx-auto w-24 h-24 rounded-full mb-4">
+        @else
+            <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar"
+                class="mx-auto w-24 h-24 rounded-full mb-4">
+        @endif
 
         <h2 class="text-xl font-semibold">{{ $user->name }}</h2>
         <p class="text-sm text-gray-600">@ {{ $user->username }}</p>

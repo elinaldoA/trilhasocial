@@ -16,13 +16,17 @@
         <ul class="divide-y divide-gray-200">
             @foreach($lista as $pessoa)
                 <li class="flex items-center justify-between py-3">
-                    <a href="{{ route('profile.edit', $pessoa->id) }}" class="flex items-center space-x-4 hover:underline">
+                    <a href="{{ route('perfil.publico', $pessoa->username) }}" class="flex items-center space-x-4 hover:underline">
                         <!-- Foto de perfil pequena -->
-                        <img
-                            src="{{ asset('storage/' . $pessoa->profile_photo_path ?? 'https://ui-avatars.com/api/?name='.urlencode($pessoa->name).'&background=random' )}}"
-                            alt="{{ $pessoa->name }}"
-                            class="w-10 h-10 rounded-full object-cover"
-                        >
+                        @if ($pessoa->profile_photo_path)
+                                    <img src="{{ asset('storage/' . $pessoa->profile_photo_path) }}" alt="Avatar"
+                                        class="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-sm"
+                            loading="lazy" />
+                                @else
+                                    <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar"
+                                        class="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-sm"
+                            loading="lazy" />
+                        @endif
                         <span class="font-medium text-gray-900">{{ $pessoa->name }}</span>
                     </a>
 

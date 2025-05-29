@@ -97,4 +97,8 @@ class User extends Authenticatable
 
         return asset('images/default-cover.jpg');
     }
+    public function trails()
+    {
+        return $this->hasMany(Trail::class);
+    }
 }

@@ -4,16 +4,20 @@
         {{-- Feed principal --}}
         <main class="flex-1 space-y-8 bg-gray-50">
             @if (session('success'))
-                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => { show = false;
-                    setTimeout(() => location.reload(), 500); }, 4000)" x-transition
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => {
+                    show = false;
+                    setTimeout(() => location.reload(), 500);
+                }, 4000)" x-transition
                     class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if ($errors->any())
-                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => { show = false;
-                    setTimeout(() => location.reload(), 500); }, 4000)" x-transition
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => {
+                    show = false;
+                    setTimeout(() => location.reload(), 500);
+                }, 4000)" x-transition
                     class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
                     <ul class="list-disc list-inside">
                         @foreach ($errors->all() as $error)
@@ -29,9 +33,15 @@
                     {{-- Header --}}
                     <header class="flex items-center gap-4">
                         <a href="{{ route('perfil.publico', $trail->user->username) }}">
-                            <img src="{{ $trail->user->profile_photo_path ? asset('storage/' . $trail->user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($trail->user->name) }}"
-                                alt="Foto de {{ $trail->user->name }}"
-                                class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
+                            @if ($trail->profile_photo_path)
+                                <img src="{{ asset('storage/' . $trail->profile_photo_path) }}"
+                                    alt="Foto de {{ $trail->user->name }}"
+                                    class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
+                            @else
+                                <img src="{{ asset('images/default-avatar.png') }}"
+                                    alt="Foto de {{ $trail->user->name }}"
+                                    class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
+                            @endif
                         </a>
 
                         <div class="flex flex-col flex-1 min-w-0">
@@ -460,9 +470,15 @@
                 @foreach ($sugestoes as $sugestao)
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center space-x-3">
-                            <img src="{{ asset('storage/' . $sugestao->profile_photo_path ?? 'https://ui-avatars.com/api/?name=' . urlencode($sugestao->name)) }}"
-                                alt="{{ $sugestao->name }}"
-                                class="w-10 h-10 rounded-full object-cover border border-gray-300" />
+                            <a href="{{ route('perfil.publico', $sugestao->username) }}">
+                                @if ($sugestao->profile_photo_path)
+                                    <img src="{{ asset('storage/' . $sugestao->profile_photo_path) }}" alt="Avatar"
+                                        class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
+                                @else
+                                    <img src="{{ asset('images/default-avatar.png') }}" alt="Avatar"
+                                        class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
+                                @endif
+                            </a>
                             <div>
                                 <p class="font-semibold text-gray-900 text-sm truncate max-w-[150px]">
                                     {{ $sugestao->name }}</p>

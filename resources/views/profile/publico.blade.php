@@ -5,22 +5,42 @@
                 <img src="{{ $user->coverPhotoUrl() }}" alt="Capa" class="w-full h-52 sm:h-60 object-cover">
 
                 <div class="absolute -bottom-12 left-6">
-                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Avatar"
-                        class="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover">
+                    @if($user->profile_photo_path)
+                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}"
+                            alt="Avatar"
+                            class="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover">
+                    @else
+                        <img src="{{ asset('images/default-avatar.png') }}"
+                            alt="Avatar"
+                            class="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover">
+                    @endif
                 </div>
             </div>
 
             <div class="pt-16 px-6 pb-6">
-                <h2 class="text-3xl font-extrabold">{{ $user->name }}</h2>
-                <p class="text-sm text-gray-500 mb-2">{{ '@' . $user->username }}</p>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-3xl font-extrabold">{{ $user->name }}</h2>
+                        <p class="text-sm text-gray-500 mb-2">{{ '@' . $user->username }}</p>
+                    </div>
+                    @if (auth()->id() === $user->id)
+                        <a href="{{ route('profile.edit') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            Editar perfil
+                        </a>
+                    @endif
+                </div>
                 <div class="flex space-x-6 text-sm text-gray-700 mb-4">
                     <div class="flex items-center space-x-1">
+                        <span class="font-semibold">{{ $user->trails()->count() }}</span>
+                        <span>Trilhas</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
                         <span class="font-semibold">{{ $user->followers()->count() }}</span>
-                        <span>seguidores</span>
+                        <span>Seguidores</span>
                     </div>
                     <div class="flex items-center space-x-1">
                         <span class="font-semibold">{{ $user->following()->count() }}</span>
-                        <span>seguindo</span>
+                        <span>Seguindo</span>
                     </div>
                 </div>
 

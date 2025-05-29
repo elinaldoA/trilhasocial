@@ -10,12 +10,15 @@
             @foreach($solicitacoes as $pessoa)
                 <li class="flex items-center justify-between py-4">
                     <a href="{{ route('perfil.publico', $pessoa->username) }}" class="flex items-center space-x-4 hover:underline transition">
-                        <img
-                            src="{{ asset('storage/' .$pessoa->profile_photo_path) }}"
+                        @if($pessoa->profile_photo_path)
+                        <img src="{{ asset('storage/' . $pessoa->profile_photo_path) }}"
                             alt="{{ $pessoa->name }}"
-                            class="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-sm"
-                            loading="lazy"
-                        >
+                            class="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-sm" loading="lazy">
+                            @else
+                                <img src="{{ asset('images/default-avatar.png') }}"
+                                    alt="{{ $pessoa->name }}"
+                                    class="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-sm" loading="lazy">
+                        @endif
                         <span class="font-medium text-gray-900 text-lg">{{ $pessoa->name }}</span>
                     </a>
 

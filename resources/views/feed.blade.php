@@ -4,23 +4,17 @@
         {{-- Feed principal --}}
         <main class="flex-1 space-y-8 bg-gray-50">
             @if (session('success'))
-                <div x-data="{ show: true }"
-                    x-show="show"
-                    x-init="setTimeout(() => { show = false; setTimeout(() => location.reload(), 500); }, 4000)"
-                    x-transition
-                    class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"
-                    role="alert">
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => { show = false;
+                    setTimeout(() => location.reload(), 500); }, 4000)" x-transition
+                    class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if ($errors->any())
-                <div x-data="{ show: true }"
-                    x-show="show"
-                    x-init="setTimeout(() => { show = false; setTimeout(() => location.reload(), 500); }, 4000)"
-                    x-transition
-                    class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
-                    role="alert">
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => { show = false;
+                    setTimeout(() => location.reload(), 500); }, 4000)" x-transition
+                    class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
                     <ul class="list-disc list-inside">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -34,9 +28,11 @@
 
                     {{-- Header --}}
                     <header class="flex items-center gap-4">
-                        <img src="{{ asset('storage/' . $trail->user->profile_photo_path ?? 'https://ui-avatars.com/api/?name=' . urlencode($trail->user->name)) }}"
-                            alt="Foto do usuário {{ $trail->user->name }}"
-                            class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
+                        <a href="{{ route('perfil.publico', $trail->user->username) }}">
+                            <img src="{{ $trail->user->profile_photo_path ? asset('storage/' . $trail->user->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($trail->user->name) }}"
+                                alt="Foto de {{ $trail->user->name }}"
+                                class="w-12 h-12 rounded-full object-cover ring-2 ring-primary-500" />
+                        </a>
 
                         <div class="flex flex-col flex-1 min-w-0">
                             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $trail->name }}</h2>
@@ -85,10 +81,9 @@
                     </header>
 
                     @if ($trail->images->count())
-                        {{-- Carrossel de imagens --}}
+                        {{-- Carrossel de imagens (mantido igual) --}}
                         <div x-data="{ current: 0 }"
                             class="relative w-full aspect-w-16 aspect-h-9 bg-black select-none overflow-hidden rounded-t-lg">
-
                             {{-- Container de imagens --}}
                             <div class="flex transition-transform duration-500"
                                 :style="'transform: translateX(-' + (current * 100) + '%)'">
@@ -121,15 +116,54 @@
                             @endif
                         </div>
                     @elseif ($trail->videos->count())
-                        <div
+                        {{-- Carrossel de vídeos --}}
+                        <div x-data="{ current: 0, playing: false }"
                             class="relative w-full aspect-w-16 aspect-h-9 bg-black select-none overflow-hidden rounded-t-lg">
-                            <video autoplay muted playsinline controls
-                                class="w-full h-full object-cover rounded-t-lg video-autoplay-with-audio"
-                                data-audio="true">
-                                <source src="{{ asset('storage/' . $trail->videos->first()->path) }}"
-                                    type="video/mp4" />
-                                Seu navegador não suporta vídeos HTML5.
-                            </video>
+
+                            {{-- Container de vídeos --}}
+                            <div class="flex transition-transform duration-500"
+                                :style="'transform: translateX(-' + (current * 100) + '%)'">
+                                @foreach ($trail->videos as $video)
+                                    <div class="w-full h-full flex-shrink-0 relative">
+                                        <video x-ref="video{{ $loop->index }}" class="w-full h-full object-cover"
+                                            :muted="!playing" playsinline
+                                            @click="playing = !playing; $refs.video{{ $loop->index }}.paused ? $refs.video{{ $loop->index }}.play() : $refs.video{{ $loop->index }}.pause()">
+                                            <source src="{{ asset('storage/' . $video->path) }}" type="video/mp4" />
+                                            Seu navegador não suporta vídeos HTML5.
+                                        </video>
+                                        <div x-show="!playing && $refs.video{{ $loop->index }}.paused"
+                                            class="absolute inset-0 flex items-center justify-center">
+                                            <button @click="playing = true; $refs.video{{ $loop->index }}.play()"
+                                                class="bg-black bg-opacity-50 text-white rounded-full p-4 hover:bg-opacity-70 transition">
+                                                ▶
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            @if ($trail->videos->count() > 1)
+                                {{-- Botões de navegação --}}
+                                <button
+                                    @click="current = (current - 1 + {{ $trail->videos->count() }}) % {{ $trail->videos->count() }}; playing = false;"
+                                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-60 text-white rounded-full p-1">
+                                    ‹
+                                </button>
+                                <button
+                                    @click="current = (current + 1) % {{ $trail->videos->count() }}; playing = false;"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 hover:bg-opacity-60 text-white rounded-full p-1">
+                                    ›
+                                </button>
+
+                                {{-- Indicadores --}}
+                                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1">
+                                    @foreach ($trail->videos as $index => $video)
+                                        <span :class="current === {{ $index }} ? 'bg-white' : 'bg-white/50'"
+                                            class="w-2 h-2 rounded-full cursor-pointer"
+                                            @click="current = {{ $index }}; playing = false;"></span>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     @endif
 

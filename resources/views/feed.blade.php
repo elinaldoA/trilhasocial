@@ -26,10 +26,172 @@
                     </ul>
                 </div>
             @endif
+
+            <!-- Barra de Stories -->
+            <div class="bg-white border border-gray-200 rounded-xl p-4 overflow-x-auto">
+                <div class="flex space-x-4">
+                    <!-- Seu story (para adicionar novo) -->
+                    <div class="flex flex-col items-center space-y-1" x-data="{ showCreateModal: false }">
+                        <!-- Botão para criar story -->
+                        <div class="relative cursor-pointer" @click="showCreateModal = true">
+                            <div
+                                class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+                                <span class="text-2xl">+</span>
+                            </div>
+                            <div
+                                class="absolute bottom-0 right-0 bg-blue-500 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs">
+                                +
+                            </div>
+                        </div>
+                        <span class="text-xs">Seu Story</span>
+
+                        <!-- Modal de Criação de Story -->
+                        <div x-show="showCreateModal" x-transition.opacity
+                            class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
+                            @click.away="showCreateModal = false" @keydown.escape.window="showCreateModal = false">
+
+                            <div class="bg-white rounded-lg w-full max-w-md overflow-hidden">
+                                <div class="p-4 border-b flex justify-between items-center">
+                                    <h3 class="text-lg font-semibold">Criar Story</h3>
+                                    <button @click="showCreateModal = false"
+                                        class="text-gray-500 hover:text-gray-700 text-2xl">
+                                        &times;
+                                    </button>
+                                </div>
+
+                                <div class="p-4" x-data="{
+                                    mediaFile: null,
+                                    mediaType: null,
+                                    mediaPreview: null,
+                                    isLoading: false,
+
+                                    handleFileSelect(event) {
+                                        const file = event.target.files[0];
+                                        if (!file) return;
+
+                                        this.mediaFile = file;
+                                        this.mediaType = file.type.startsWith('video') ? 'video' : 'image';
+
+                                        const reader = new FileReader();
+                                        reader.onload = (e) => {
+                                            this.mediaPreview = e.target.result;
+                                        };
+                                        reader.readAsDataURL(file);
+                                    },
+
+                                    uploadStory() {
+                                        if (!this.mediaFile) return;
+
+                                        this.isLoading = true;
+                                        const formData = new FormData();
+                                        formData.append('media', this.mediaFile);
+
+                                        fetch('/stories', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                },
+                                                body: formData
+                                            })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.success) {
+                                                    window.location.reload();
+                                                } else {
+                                                    alert('Erro ao publicar story: ' + (data.message || 'Tente novamente'));
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error:', error);
+                                                alert('Erro ao publicar story');
+                                            })
+                                            .finally(() => {
+                                                this.isLoading = false;
+                                            });
+                                    }
+                                }">
+                                    <input type="file" id="story-media" accept="image/*,video/*" class="hidden"
+                                        @change="handleFileSelect">
+
+                                    <div x-show="!mediaFile"
+                                        class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer"
+                                        @click="document.getElementById('story-media').click()">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <p class="mt-2 text-sm text-gray-600">Clique para selecionar uma foto ou vídeo
+                                        </p>
+                                        <p class="text-xs text-gray-500">Formatos suportados: JPG, PNG, MP4</p>
+                                    </div>
+
+                                    <div x-show="mediaFile" class="relative">
+                                        <template x-if="mediaType === 'image'">
+                                            <img :src="mediaPreview" class="w-full h-auto rounded-lg">
+                                        </template>
+
+                                        <template x-if="mediaType === 'video'">
+                                            <video :src="mediaPreview" controls class="w-full rounded-lg"></video>
+                                        </template>
+
+                                        <div class="mt-4 flex justify-between">
+                                            <button @click="mediaFile = null"
+                                                class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                                                Cancelar
+                                            </button>
+                                            <button @click="uploadStory" :disabled="isLoading"
+                                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                                                <span x-show="!isLoading">Publicar Story</span>
+                                                <span x-show="isLoading" class="flex items-center">
+                                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                            stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                        </path>
+                                                    </svg>
+                                                    Publicando...
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stories de quem você segue -->
+                    @foreach ($storiesUsers as $user)
+                        <div x-data="{ seen: {{ $user->stories->first()->viewers->contains(auth()->id()) ? 'true' : 'false' }} }"
+                            @click="window.location.href = '{{ route('stories.show', $user->id) }}'"
+                            class="flex flex-col items-center space-y-1 cursor-pointer">
+                            <div class="relative">
+                                <div class="w-16 h-16 rounded-full p-0.5"
+                                    :class="seen ? 'bg-gray-300' : 'bg-gradient-to-tr from-yellow-400 to-pink-600'">
+                                    <img src="{{ $user->profile_photo_path }}" alt="{{ $user->name }}"
+                                        class="w-full h-full rounded-full object-cover border-2 border-white">
+                                </div>
+                                @if ($user->stories->count() > 1)
+                                    <div
+                                        class="absolute -top-1 -right-1 bg-blue-500 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs">
+                                        {{ $user->stories->count() }}
+                                    </div>
+                                @endif
+                            </div>
+                            <span class="text-xs">{{ $user->username }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             @foreach ($trails as $trail)
                 <article x-data="{ showComments: false, popupCompartilharAberto: false, current: 0 }"
                     class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md hover:shadow-xl transition-all duration-300 p-6 space-y-4">
 
+                    <!-- Restante do conteúdo do artigo (mantido igual) -->
                     {{-- Header --}}
                     <header class="flex items-center gap-4">
                         <a href="{{ route('perfil.publico', $trail->user->username) }}">
@@ -76,7 +238,8 @@
                                     @else
                                         <form method="POST" action="{{ route('follow.toggle', $trail->user) }}">
                                             @csrf
-                                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                            <button type="submit"
+                                                class="w-full text-left px-4 py-2 hover:bg-gray-100">
                                                 @if (auth()->user()->isFollowing($trail->user))
                                                     Deixar de seguir {{ $trail->user->name }}
                                                 @else
@@ -325,10 +488,6 @@
                         </div>
 
                     </footer>
-
-                    <!-- Alpine.js -->
-                    <script src="//unpkg.com/alpinejs" defer></script>
-
 
                     {{-- Comentários --}}
                     <div x-show="showComments" x-transition

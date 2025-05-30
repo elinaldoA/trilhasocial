@@ -101,4 +101,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Trail::class);
     }
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
 }

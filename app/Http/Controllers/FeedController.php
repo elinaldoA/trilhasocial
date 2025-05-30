@@ -4,40 +4,52 @@ namespace App\Http\Controllers;
 
 use App\Models\Trail;
 use App\Models\User;
+use App\Models\Story;
 use Illuminate\Http\Request;
 
 class FeedController extends Controller
 {
     public function index()
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    // IDs dos usuários que ele segue + ele mesmo
-    $idsSeguindoOuEu = $user->following->pluck('id')->push($user->id);
+        // IDs de quem o usuário segue + ele mesmo
+        $idsSeguindoOuEu = $user->following->pluck('id')->push($user->id);
 
-    // Busca trilhas de:
-    // - Usuários que ele segue ou ele mesmo
-    // - Ou de usuários públicos
-    $trails = Trail::with(['user', 'likes', 'comments.user', 'images'])
-        ->where(function ($query) use ($idsSeguindoOuEu) {
-            $query->whereIn('user_id', $idsSeguindoOuEu)
-                  ->orWhereHas('user', function ($q) {
-                      $q->where('is_private', false);
-                  });
-        })
-        ->latest()
-        ->paginate(6);
+        // Query para trilhas (mantida igual)
+        $trails = Trail::with(['user', 'likes', 'comments.user', 'images'])
+            ->where(function ($query) use ($idsSeguindoOuEu) {
+                $query->whereIn('user_id', $idsSeguindoOuEu)
+                    ->orWhereHas('user', function ($q) {
+                        $q->where('is_private', false);
+                    });
+            })
+            ->latest()
+            ->paginate(6);
 
-    // Sugestões de usuários que ele ainda não segue
-    $sugestoes = User::where('id', '!=', $user->id)
-        ->whereNotIn('id', $user->following->pluck('id'))
-        ->inRandomOrder()
-        ->take(5)
-        ->get();
+        // Sugestões de usuários (mantida igual)
+        $sugestoes = User::where('id', '!=', $user->id)
+            ->whereNotIn('id', $user->following->pluck('id'))
+            ->inRandomOrder()
+            ->take(5)
+            ->get();
 
-    return view('feed', compact('trails', 'sugestoes'));
-}
+        // Obter usuários com stories ativos (novo)
+        $storiesUsers = User::whereHas('stories', function($query) {
+                $query->where('expires_at', '>', now());
+            })
+            ->whereIn('id', $idsSeguindoOuEu) // Apenas quem o usuário segue
+            ->with(['stories' => function($query) {
+                $query->where('expires_at', '>', now())
+                    ->orderBy('created_at', 'desc');
+            }])
+            ->get()
+            ->sortByDesc(function($user) {
+                return $user->stories->first()->created_at;
+            });
 
+        return view('feed', compact('trails', 'sugestoes', 'storiesUsers'));
+    }
 
     public function buscar(Request $request)
     {

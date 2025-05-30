@@ -42,4 +42,9 @@ class Trail extends Model
     {
         return $this->hasMany(SharedTrail::class);
     }
+
+    public function storyUsers()
+    {
+        return $this->hasMany(Story::class);
+    }
 }

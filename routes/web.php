@@ -7,6 +7,7 @@ use App\Http\Controllers\TrailController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\StoryController;
 use App\Http\Controllers\TrailShareController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +52,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/buscar', [FeedController::class, 'buscar'])->name('buscar');
     Route::get('/explorar', [FeedController::class, 'explorar'])->name('explorar');
+
+    Route::get('/stories', [StoryController::class, 'index'])->name('stories.index');
+    Route::get('/stories/{user}', [StoryController::class, 'show'])->name('stories.show');
+    Route::post('/stories', [StoryController::class, 'store']);
+    Route::post('/stories/{story}/view', [StoryController::class, 'view']);
 });
 
 require __DIR__.'/auth.php';
